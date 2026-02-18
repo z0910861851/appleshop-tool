@@ -191,24 +191,12 @@ const L2=[
   {id:'l2-ai',icon:'iai',title:'大語言模型開發',desc:'AI 訓練、本地 LLM',hide:['iphone']}
 ];
 
-// === Phase 2: 根據實測數據調整推薦規則 ===
-// 原則：
-// - M4 Pro 的 20核GPU 在傳統圖形運算勝過 M5 的 10核GPU
-// - M5 優勢在 AI 加速器，適合 AI 開發、跑 LLM
-// - 3D 建模主要吃 GPU 核心數 → 推薦 M4 Pro
-// - AI 開發吃 Neural Engine 和記憶體頻寬 → 推薦 M5
 const RULES={
   macbook:{
-    // 第一層 → 入門款
     'l1-ge':'macbook-air-m4','l1-vi':'macbook-air-m4','l1-do':'macbook-air-m4','l1-co':'macbook-air-m4',
-    // 第二層進階 → Pro 等級（根據實測數據調整）
-    'l2-dr':'macbook-pro-14-m4pro',  // 繪圖 2D
-    'l2-ph':'macbook-pro-14-m4pro',  // 影像編輯
-    'l2-ve':'macbook-pro-14-m4pro',  // 影片剪輯
-    'l2-mu':'macbook-pro-14-m4pro',  // 音樂製作
-    'l2-3d':'macbook-pro-14-m4pro',  // 3D 建模 ← 改為 M4 Pro（GPU 核心數優勢）
-    'l2-cd':'macbook-pro-14-m4pro',  // 程式開發
-    'l2-ai':'macbook-pro-14-m5'      // AI 開發 ← 改為 M5（AI 加速器優勢）
+    'l2-dr':'macbook-pro-14-m4pro','l2-ph':'macbook-pro-14-m4pro','l2-ve':'macbook-pro-14-m4pro',
+    'l2-mu':'macbook-pro-14-m4pro','l2-3d':'macbook-pro-14-m4pro','l2-cd':'macbook-pro-14-m4pro',
+    'l2-ai':'macbook-pro-14-m5'
   },
   ipad:{
     'l1-ge':'ipad-11-a16','l1-vi':'ipad-11-a16','l1-do':'ipad-air-m3','l1-co':'ipad-air-m3',
@@ -221,11 +209,10 @@ const RULES={
   }
 };
 
-// 客群微調（只在精確 match 時覆蓋）
 const CUST={
   macbook:{
     student:{'l1-ge':'macbook-air-m4','l1-do':'macbook-air-m4'},
-    creator:{'l2-3d':'macbook-pro-14-m4pro','l2-ai':'macbook-pro-14-m5'}  // 創作者：3D 推 M4 Pro，AI 推 M5
+    creator:{'l2-3d':'macbook-pro-14-m4pro','l2-ai':'macbook-pro-14-m5'}
   },
   ipad:{
     student:{'l1-co':'ipad-air-m3'},
@@ -241,10 +228,23 @@ const CUST={
 
 let S={pt:null,ct:null,l1:null,l2:null};
 
+// === Google Analytics 事件追蹤函數 ===
+function trackEvent(category, action, label, value) {
+  if (typeof gtag === 'function') {
+    gtag('event', action, {
+      'event_category': category,
+      'event_label': label,
+      'value': value
+    });
+  }
+}
+
 document.addEventListener('DOMContentLoaded',()=>{
   renderLayer('l1b',L1,1);
   renderLayer('l2b',L2,2);
   initProd();
+  // 追蹤頁面載入
+  trackEvent('Page', 'page_view', 'Guide Mode', 1);
 });
 
 function renderLayer(id,items,layer){
@@ -260,6 +260,8 @@ function swMode(m,btn){
   document.querySelectorAll('.mb').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
   document.querySelectorAll('.ms').forEach(s=>s.classList.remove('on'));
   document.getElementById(m==='guide'?'gMode':'pMode').classList.add('on');
+  // 追蹤模式切換
+  trackEvent('Navigation', 'mode_switch', m === 'guide' ? 'Guide Mode' : 'Product Mode', 1);
 }
 function unlock(id){document.getElementById(id).classList.remove('lk');}
 function lock(id){document.getElementById(id).classList.add('lk');}
@@ -273,12 +275,16 @@ function selPT(pt,el){
   filterNeeds(pt);
   unlock('bCust');unlock('bL1');lock('bL2');
   hideRes();
+  // 追蹤產品類型選擇
+  trackEvent('Selection', 'product_type', pt, 1);
 }
 
 function selCT(ct,el){
   if(S.ct===ct){S.ct=null;el.classList.remove('on');}
   else{S.ct=ct;document.querySelectorAll('#ct-st,#ct-of,#ct-cr,#ct-el').forEach(c=>c.classList.remove('on'));el.classList.add('on');}
   updRes();
+  // 追蹤客群選擇
+  if(S.ct) trackEvent('Selection', 'customer_type', ct, 1);
 }
 
 function selNeed(layer,id,el){
@@ -292,6 +298,9 @@ function selNeed(layer,id,el){
     S[key]=id;
     cont.querySelectorAll('.no').forEach(o=>o.classList.remove(cls));el.classList.add(cls);
     if(layer===1)unlock('bL2');
+    // 追蹤需求選擇
+    const needName = layer===1 ? L1.find(n=>n.id===id)?.title : L2.find(n=>n.id===id)?.title;
+    trackEvent('Selection', layer===1 ? 'need_l1' : 'need_l2', needName || id, 1);
   }
   updRes();
 }
@@ -309,7 +318,6 @@ function updRes(){
   const ptR=RULES[S.pt]||{};
   let pid=ptR[need]||ptR[S.l1];
   if(!pid){hideRes();return;}
-  // 客群微調：只在精確 match 時覆蓋
   if(S.ct){
     const cr=CUST[S.pt]?.[S.ct]||{};
     if(cr[need])pid=cr[need];
@@ -334,6 +342,9 @@ function updRes(){
       ${objs.length?`<div class="st">異議處理</div>${objs.map(o=>`<div class="ob"><div class="oq"><div class="obg">Q</div>${o.objection}</div><div class="oa">${o.response}</div></div>`).join('')}`:''}
     </div>`;
   rc.classList.remove('on');void rc.offsetWidth;rc.classList.add('on');
+  // 追蹤最終推薦結果
+  trackEvent('Recommendation', 'product_recommended', prod.name, 1);
+  trackEvent('Recommendation', 'recommendation_flow', `${S.pt}_${S.ct||'none'}_${need}_${prod.id}`, 1);
 }
 
 function hideRes(){
@@ -350,6 +361,8 @@ function initProd(){
 function filCat(cat,el){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));el.classList.add('on');
   renderGrid(cat);document.getElementById('pdet').classList.remove('on');
+  // 追蹤產品直查分類
+  trackEvent('Product Direct', 'category_filter', cat, 1);
 }
 
 function renderGrid(cat){
@@ -372,6 +385,8 @@ function selProd(id,el){
     ${objs.length?`<div class="ds"><div class="dst">異議處理 (${objs.length}個)</div>${objs.map(o=>`<div class="ob"><div class="oq"><div class="obg">Q</div>${o.objection}</div><div class="oa">${o.response}</div></div>`).join('')}</div>`:''}`;
   det.classList.remove('on');void det.offsetWidth;det.classList.add('on');
   setTimeout(()=>det.scrollIntoView({behavior:'smooth',block:'start'}),100);
+  // 追蹤產品直查
+  trackEvent('Product Direct', 'product_viewed', p.name, 1);
 }
 </script>
 </body></html>
