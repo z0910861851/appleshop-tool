@@ -9,6 +9,41 @@
   gtag('js', new Date());
   gtag('config', 'G-HY8ET612N7');
 </script>
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getFirestore, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDZVOTAOB91GQI1QRKysMBy9KsHrPMO-bw",
+    authDomain: "apple-sale.firebaseapp.com",
+    projectId: "apple-sale",
+    storageBucket: "apple-sale.firebasestorage.app",
+    messagingSenderId: "366141813849",
+    appId: "1:366141813849:web:5e55a94d5e92b673186d48",
+    measurementId: "G-WHPWWBP4Y3"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // 全域記錄函數
+  window.logToFirestore = async (action, data = {}) => {
+    try {
+      const staff = JSON.parse(localStorage.getItem('salesStaff') || 'null');
+      if (!staff) return;
+      await addDoc(collection(db, 'usage_logs'), {
+        ...data,
+        action,
+        store: staff.store,
+        staff: staff.name,
+        timestamp: serverTimestamp()
+      });
+    } catch(e) { console.log('Firebase log failed:', e); }
+  };
+
+  window.firebaseReady = true;
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="Apple 產品智慧推薦銷售助手">
@@ -19,6 +54,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/svg+xml" href="icon-192.svg">
 <link rel="apple-touch-icon" href="icon-192.svg">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.min.js"></script>
 <title>蘋果銷售小工具</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -101,6 +137,71 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg
 .ci2{background:var(--el);border-radius:10px;padding:16px;margin-bottom:8px;}
 .cn{font-size:13px;font-weight:700;color:var(--ac);margin-bottom:8px;}
 .ctx{font-size:13px;line-height:1.7;border-left:3px solid var(--ac);padding-left:12px;}
+
+/* 登入 Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);}
+.modal-overlay.hide{display:none;}
+.modal{background:var(--sf);border:1px solid var(--bd);border-radius:20px;padding:32px;width:100%;max-width:400px;margin:16px;}
+.modal-logo{display:flex;align-items:center;gap:12px;margin-bottom:24px;}
+.modal-logo-icon{width:40px;height:40px;background:linear-gradient(135deg,#0071e3,#003d82);border-radius:12px;display:flex;align-items:center;justify-content:center;}
+.modal h2{font-size:20px;font-weight:700;margin-bottom:4px;}
+.modal p{font-size:13px;color:var(--mu);margin-bottom:24px;}
+.modal-label{font-size:12px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;}
+.modal-select{width:100%;background:var(--el);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;color:var(--tx);font-size:14px;font-family:inherit;outline:none;margin-bottom:16px;appearance:none;cursor:pointer;transition:border-color .2s;}
+.modal-select:focus{border-color:var(--ac);}
+.modal-btn{width:100%;background:var(--ac);border:none;border-radius:10px;padding:14px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;margin-top:8px;}
+.modal-btn:hover{background:#0077ed;transform:translateY(-1px);}
+.modal-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+/* Header 用戶資訊 */
+.staff-info{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mu);}
+.staff-dot{width:7px;height:7px;background:var(--gr);border-radius:50%;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+.staff-name{color:var(--tx);font-weight:500;}
+.staff-change{color:var(--ac);cursor:pointer;text-decoration:underline;font-size:11px;}
+
+/* 場景話術 */
+.sc-block{background:linear-gradient(135deg,rgba(0,113,227,.06),rgba(191,90,242,.04));border:1px solid rgba(0,113,227,.2);border-radius:12px;padding:16px;margin-bottom:10px;transition:all .2s;}
+.sc-block:hover{background:linear-gradient(135deg,rgba(0,113,227,.1),rgba(191,90,242,.07));border-color:rgba(0,113,227,.35);}
+.sc-num{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;background:var(--ac);border-radius:50%;font-size:10px;font-weight:800;color:#fff;flex-shrink:0;margin-right:8px;}
+.sc-hook{font-size:13px;font-weight:700;color:#fff;margin-bottom:8px;display:flex;align-items:flex-start;}
+.sc-hook-text{flex:1;line-height:1.5;}
+.sc-divider{border:none;border-top:1px solid rgba(255,255,255,.08);margin:8px 0;}
+.sc-point{font-size:13px;color:var(--ac);font-weight:600;margin-bottom:4px;}
+.sc-scene{font-size:12px;color:var(--mu);line-height:1.6;}
+.sc-loading{text-align:center;padding:20px;color:var(--mu);font-size:13px;display:flex;align-items:center;justify-content:center;gap:8px;}
+.sc-label{font-size:12px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.8px;margin:16px 0 10px;display:flex;align-items:center;gap:8px;}
+.sc-label-badge{background:linear-gradient(135deg,var(--ac),var(--pu));color:#fff;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700;letter-spacing:.5px;}
+
+/* 預算選擇 */
+.n3{background:var(--or);color:#fff;}
+.g3b{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.cd.bg-on-low{background:rgba(255,149,0,.12);border-color:var(--or);}
+.cd.bg-on-mid{background:rgba(48,209,88,.1);border-color:var(--gr);}
+
+/* AI 快速分析 */
+.ai-bar{background:linear-gradient(135deg,rgba(0,113,227,.08),rgba(191,90,242,.06));border-bottom:1px solid rgba(0,113,227,.2);padding:14px 24px;}
+.ai-bar-in{max-width:1100px;margin:0 auto;}
+.ai-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--ac);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.ai-label span{background:var(--ac);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px;}
+.ai-row{display:flex;gap:10px;align-items:flex-end;}
+.ai-input{flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(0,113,227,.3);border-radius:12px;padding:11px 16px;color:var(--tx);font-size:14px;font-family:inherit;outline:none;transition:border-color .2s;}
+.ai-input:focus{border-color:var(--ac);background:rgba(0,113,227,.05);}
+.ai-input::placeholder{color:var(--mu);}
+.ai-btn{background:linear-gradient(135deg,#0071e3,#5b5de7);border:none;border-radius:12px;padding:11px 22px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .2s;display:flex;align-items:center;gap:8px;}
+.ai-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,113,227,.4);}
+.ai-btn:disabled{opacity:.5;cursor:not-allowed;}
+.ai-result{margin-top:10px;background:rgba(0,113,227,.06);border:1px solid rgba(0,113,227,.2);border-radius:10px;padding:12px 16px;font-size:13px;line-height:1.7;display:none;}
+.ai-result.on{display:block;animation:fadeIn .3s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
+.ai-pitch-label{font-size:11px;font-weight:700;color:var(--ac);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;}
+.ai-pitch-text{color:var(--tx);line-height:1.75;}
+.ai-tags-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.ai-tag{padding:3px 10px;border-radius:10px;font-size:11px;font-weight:600;}
+.ai-tag-pt{background:rgba(0,113,227,.2);color:var(--ac);}
+.ai-tag-ct{background:rgba(48,209,88,.15);color:var(--gr);}
+.ai-tag-nd{background:rgba(255,149,0,.15);color:var(--or);}
+.ai-spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
 </style>
 <svg style="display:none"><defs>
 <symbol id="iz" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9z" fill="white"/></symbol>
@@ -126,19 +227,68 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg
 </defs></svg>
 </head>
 <body>
+<!-- 登入 Modal -->
+<div class="modal-overlay" id="loginModal">
+  <div class="modal">
+    <div class="modal-logo">
+      <div class="modal-logo-icon"><svg width="20" height="20"><use href="#iz"/></svg></div>
+      <div>
+        <div style="font-size:17px;font-weight:700">蘋果銷售小工具</div>
+        <div style="font-size:12px;color:var(--mu)">請先選擇門市和姓名</div>
+      </div>
+    </div>
+    <div class="modal-label">門市</div>
+    <select class="modal-select" id="loginStore">
+      <option value="">選擇門市...</option>
+      <option>AppleShop 新岡山</option>
+      <option>AppleShop 右昌</option>
+      <option>AppleShop 華榮</option>
+      <option>AppleShop 自由</option>
+      <option>AppleShop 新光華</option>
+      <option>AppleShop 五甲</option>
+    </select>
+    <button class="modal-btn" id="loginBtn" onclick="doLogin()" disabled>開始使用</button>
+  </div>
+</div>
+
 <div class="hd"><div class="hd-in">
   <div class="logo"><div class="logo-dot"><svg width="14" height="14"><use href="#iz"/></svg></div>蘋果銷售小工具</div>
-  <div class="mt">
-    <button class="mb on" onclick="swMode('guide',this)">🎯 引導推薦</button>
-    <button class="mb" onclick="swMode('product',this)">⚡ 產品直查</button>
+  <div style="display:flex;align-items:center;gap:16px;">
+    <div class="staff-info" id="staffInfo" style="display:none">
+      <div class="staff-dot"></div>
+      <span id="staffLabel" class="staff-name"></span>
+      <span class="staff-change" onclick="showLogin()">切換</span>
+    </div>
+    <div class="mt">
+      <button class="mb on" onclick="swMode('guide',this)"><i data-lucide="target" style="width:14px;height:14px;vertical-align:-2px;margin-right:5px"></i>引導推薦</button>
+      <button class="mb" onclick="swMode('product',this)"><i data-lucide="zap" style="width:14px;height:14px;vertical-align:-2px;margin-right:5px"></i>產品直查</button>
+    </div>
   </div>
 </div></div>
+
+<!-- AI 快速分析列 -->
+<div class="ai-bar">
+  <div class="ai-bar-in">
+    <div class="ai-label"><i data-lucide="sparkles" style="width:14px;height:14px;vertical-align:-2px;margin-right:5px"></i>AI 快速分析 <span>NEW</span></div>
+    <div class="ai-row">
+      <input class="ai-input" id="aiInput" type="text" placeholder="直接輸入客人說的話，例如：「我媽媽想買平板，她不太會用3C，預算一萬多」" onkeydown="if(event.key==='Enter')analyzeCustomer()">
+      <button class="ai-btn" id="aiBtn" onclick="analyzeCustomer()">
+        <span id="aiBtnText">分析客人</span>
+      </button>
+    </div>
+    <div class="ai-result" id="aiResult">
+      <div class="ai-tags-row" id="aiTags"></div>
+      <div class="ai-pitch-label"><i data-lucide="message-circle" style="width:12px;height:12px;vertical-align:-1px;margin-right:4px"></i>AI 個人化話術</div>
+      <div class="ai-pitch-text" id="aiPitch"></div>
+    </div>
+  </div>
+</div>
 
 <div class="main">
 <div id="gMode" class="ms on">
   <div class="lp">
     <div class="blk">
-      <div class="bh"><div class="bn n1">📦</div><div><div class="bl">顧客想看的商品</div><div class="bs">先選商品，再探索需求</div></div><span class="bg br">必選</span></div>
+      <div class="bh"><div class="bn n1"><i data-lucide="package" style="width:16px;height:16px"></i></div><div><div class="bl">顧客想看的商品</div><div class="bs">先選商品，再探索需求</div></div><span class="bg br">必選</span></div>
       <div class="bb"><div class="g3">
         <div class="cd" id="pt-mb" onclick="selPT('macbook',this)"><svg class="ci"><use href="#imb"/></svg><div class="ct">MacBook</div><div class="cs">Mac 系列</div></div>
         <div class="cd" id="pt-ip" onclick="selPT('ipad',this)"><svg class="ci"><use href="#iip"/></svg><div class="ct">iPad</div><div class="cs">iPad 系列</div></div>
@@ -146,12 +296,20 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg
       </div></div>
     </div>
     <div class="blk lk" id="bCust">
-      <div class="bh"><div class="bn n1">👤</div><div><div class="bl">顧客類型</div><div class="bs">選擇顧客身份</div></div><span class="bg bo">選填</span></div>
+      <div class="bh"><div class="bn n1"><i data-lucide="user" style="width:16px;height:16px"></i></div><div><div class="bl">顧客類型</div><div class="bs">選擇顧客身份</div></div><span class="bg bo">選填</span></div>
       <div class="bb"><div class="g2">
         <div class="cd" id="ct-st" onclick="selCT('student',this)"><svg class="ci"><use href="#ist"/></svg><div class="ct">學生族群</div><div class="cs">大學生・研究生</div></div>
         <div class="cd" id="ct-of" onclick="selCT('office',this)"><svg class="ci"><use href="#iof"/></svg><div class="ct">上班族</div><div class="cs">商務人士</div></div>
         <div class="cd" id="ct-cr" onclick="selCT('creator',this)"><svg class="ci"><use href="#icr"/></svg><div class="ct">創作者</div><div class="cs">設計・影音</div></div>
         <div class="cd" id="ct-el" onclick="selCT('elder',this)"><svg class="ci"><use href="#iel"/></svg><div class="ct">長輩</div><div class="cs">50歲以上</div></div>
+      </div></div>
+    </div>
+    <div class="blk lk" id="bBudget">
+      <div class="bh"><div class="bn n3"><i data-lucide="wallet" style="width:16px;height:16px"></i></div><div><div class="bl">預算考量</div><div class="bs">會影響推薦機型</div></div><span class="bg bo">選填</span></div>
+      <div class="bb"><div class="g3b">
+        <div class="cd" id="bg-free" onclick="selBG('free',this)"><i data-lucide="infinity" style="width:28px;height:28px;margin-bottom:8px;display:block;margin-left:auto;margin-right:auto;color:var(--ac)"></i><div class="ct">不限預算</div><div class="cs">推薦最適合的</div></div>
+        <div class="cd" id="bg-mid" onclick="selBG('mid',this)"><i data-lucide="credit-card" style="width:28px;height:28px;margin-bottom:8px;display:block;margin-left:auto;margin-right:auto;color:var(--gr)"></i><div class="ct">中等預算</div><div class="cs">CP值優先</div></div>
+        <div class="cd" id="bg-low" onclick="selBG('low',this)"><i data-lucide="piggy-bank" style="width:28px;height:28px;margin-bottom:8px;display:block;margin-left:auto;margin-right:auto;color:var(--or)"></i><div class="ct">預算有限</div><div class="cs">越便宜越好</div></div>
       </div></div>
     </div>
     <div class="blk lk" id="bL1">
@@ -240,24 +398,71 @@ const CUST={
   }
 };
 
-let S={pt:null,ct:null,l1:null,l2:null};
+let S={pt:null,ct:null,bg:null,l1:null,l2:null};
 
-// === Google Analytics 事件追蹤函數 ===
+// 預算推薦規則（優先於 CUST/RULES）
+const BUDGET_RULES={
+  ipad:{
+    low:{'l1-ge':'ipad-11-a16','l1-vi':'ipad-11-a16','l1-do':'ipad-11-a16','l1-co':'ipad-11-a16'},
+    mid:{'l1-ge':'ipad-air-m3','l1-vi':'ipad-air-m3','l1-do':'ipad-air-m3','l1-co':'ipad-air-m3'}
+  },
+  iphone:{
+    low:{'l1-ge':'iphone-16e','l1-vi':'iphone-16e'},
+    mid:{'l1-ge':'iphone-17','l1-vi':'iphone-17'}
+  },
+  macbook:{
+    low:{'l1-ge':'macbook-air-m4','l1-vi':'macbook-air-m4','l1-do':'macbook-air-m4','l1-co':'macbook-air-m4'},
+    mid:{'l1-ge':'macbook-air-m4','l1-vi':'macbook-air-m4','l1-do':'macbook-air-m4','l1-co':'macbook-air-m4'}
+  }
+};
+
+// === Google Analytics + Firebase 事件追蹤 ===
 function trackEvent(category, action, label, value) {
   if (typeof gtag === 'function') {
-    gtag('event', action, {
-      'event_category': category,
-      'event_label': label,
-      'value': value
-    });
+    gtag('event', action, { 'event_category': category, 'event_label': label, 'value': value });
+  }
+  // 同步記錄到 Firebase
+  if (window.logToFirestore) {
+    window.logToFirestore(action, { category, label: label || '', value: value || 0 });
   }
 }
 
-document.addEventListener('DOMContentLoaded',()=>{
+// ===== 登入 / 身份管理 =====
+function initLogin() {
+  const staff = JSON.parse(localStorage.getItem('salesStaff') || 'null');
+  if (staff) {
+    showStaffInfo(staff);
+    document.getElementById('loginModal').classList.add('hide');
+  }
+  document.getElementById('loginStore').addEventListener('change', function() {
+    document.getElementById('loginBtn').disabled = !this.value;
+  });
+}
+
+function doLogin() {
+  const store = document.getElementById('loginStore').value;
+  if (!store) return;
+  const staff = { store, name: 'anonymous' };
+  localStorage.setItem('salesStaff', JSON.stringify(staff));
+  showStaffInfo(staff);
+  document.getElementById('loginModal').classList.add('hide');
+  if (window.logToFirestore) window.logToFirestore('login', { store });
+}
+
+function showStaffInfo(staff) {
+  document.getElementById('staffLabel').textContent = staff.store;
+  document.getElementById('staffInfo').style.display = 'flex';
+}
+
+function showLogin() {
+  document.getElementById('loginModal').classList.remove('hide');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initLogin();
   renderLayer('l1b',L1,1);
   renderLayer('l2b',L2,2);
   initProd();
-  // 追蹤頁面載入
   trackEvent('Page', 'page_view', 'Guide Mode', 1);
 });
 
@@ -281,15 +486,15 @@ function unlock(id){document.getElementById(id).classList.remove('lk');}
 function lock(id){document.getElementById(id).classList.add('lk');}
 
 function selPT(pt,el){
-  if(S.pt===pt){S={pt:null,ct:null,l1:null,l2:null};el.classList.remove('on');lock('bCust');lock('bL1');lock('bL2');hideRes();return;}
-  S={pt:pt,ct:null,l1:null,l2:null};
+  if(S.pt===pt){S={pt:null,ct:null,bg:null,l1:null,l2:null};el.classList.remove('on');lock('bCust');lock('bBudget');lock('bL1');lock('bL2');hideRes();return;}
+  S={pt:pt,ct:null,bg:null,l1:null,l2:null};
   document.querySelectorAll('#pt-mb,#pt-ip,#pt-ph').forEach(c=>c.classList.remove('on'));el.classList.add('on');
   document.querySelectorAll('#ct-st,#ct-of,#ct-cr,#ct-el').forEach(c=>c.classList.remove('on'));
+  document.querySelectorAll('#bg-free,#bg-mid,#bg-low').forEach(c=>c.classList.remove('on','bg-on-low','bg-on-mid'));
   document.querySelectorAll('#l1b .no,#l2b .no').forEach(o=>o.classList.remove('s1','s2'));
   filterNeeds(pt);
-  unlock('bCust');unlock('bL1');lock('bL2');
+  unlock('bCust');unlock('bBudget');unlock('bL1');lock('bL2');
   hideRes();
-  // 追蹤產品類型選擇
   trackEvent('Selection', 'product_type', pt, 1);
 }
 
@@ -297,8 +502,19 @@ function selCT(ct,el){
   if(S.ct===ct){S.ct=null;el.classList.remove('on');}
   else{S.ct=ct;document.querySelectorAll('#ct-st,#ct-of,#ct-cr,#ct-el').forEach(c=>c.classList.remove('on'));el.classList.add('on');}
   updRes();
-  // 追蹤客群選擇
   if(S.ct) trackEvent('Selection', 'customer_type', ct, 1);
+}
+
+function selBG(bg,el){
+  document.querySelectorAll('#bg-free,#bg-mid,#bg-low').forEach(c=>c.classList.remove('on','bg-on-low','bg-on-mid'));
+  if(S.bg===bg){S.bg=null;}
+  else{
+    S.bg=bg;
+    el.classList.add('on');
+    if(bg==='low') el.classList.add('bg-on-low');
+    if(bg==='mid') el.classList.add('bg-on-mid');
+  }
+  updRes();
 }
 
 function selNeed(layer,id,el){
@@ -332,10 +548,17 @@ function updRes(){
   const ptR=RULES[S.pt]||{};
   let pid=ptR[need]||ptR[S.l1];
   if(!pid){hideRes();return;}
-  if(S.ct && !S.l2){
+
+  // 預算邏輯優先（若有設定預算且沒有選進階需求）
+  if(S.bg && S.bg!=='free' && !S.l2){
+    const br=BUDGET_RULES[S.pt]?.[S.bg]||{};
+    if(br[S.l1]) pid=br[S.l1];
+  } else if(S.ct && !S.l2){
+    // 客群邏輯（沒設預算才套用）
     const cr=CUST[S.pt]?.[S.ct]||{};
     if(cr[S.l1])pid=cr[S.l1];
   }
+
   const prod=PRODUCTS.find(p=>p.id===pid);
   if(!prod){hideRes();return;}
   const pts=(SELLING_POINTS[prod.id]||[]).slice(0,4);
@@ -344,21 +567,35 @@ function updRes(){
   const objs=OBJECTIONS[prod.id]||[];
   document.getElementById('emp').style.display='none';
   const rc=document.getElementById('rc');
+  const budgeTag=S.bg==='low'?'<span style="background:rgba(255,149,0,.2);color:var(--or);padding:3px 10px;border-radius:8px;font-size:11px;font-weight:600;margin-left:8px">預算優先</span>':S.bg==='mid'?'<span style="background:rgba(48,209,88,.15);color:var(--gr);padding:3px 10px;border-radius:8px;font-size:11px;font-weight:600;margin-left:8px">中等預算</span>':'';
   rc.innerHTML=`
     <div class="rh">
       <div class="stag"><svg width="12" height="12"><use href="#istar"/></svg> 智慧推薦</div>
-      <div class="rn">${prod.name}</div>
+      <div class="rn">${prod.name}${budgeTag}</div>
       <span class="ct2">${prod.chip}</span><span style="font-size:12px;color:var(--mu)">${prod.display}</span>
     </div>
     <div class="rb">
-      ${pts.length?`<div class="st">核心賣點</div>${pts.map(p=>`<div class="pt">${p}</div>`).join('')}`:''}`+
+      <div class="sc-label"><i data-lucide="message-circle" style="width:13px;height:13px;vertical-align:-1px;margin-right:5px"></i>場景話術 <span class="sc-label-badge">AI 生成</span></div>
+      <div id="sceneArea"><div class="sc-loading"><span class="ai-spinner"></span> AI 正在根據這位客人生成話術...</div></div>
+      ${pts.length?`<div class="st">完整賣點參考</div>${pts.map(p=>`<div class="pt">${p}</div>`).join('')}`:''}`+
       `${cust?`<div class="st">推薦話術</div><div class="pi"><div class="pn">${cust.customer}</div><div class="ptx">${cust.pitch}</div></div>`:''}
       ${objs.length?`<div class="st">異議處理</div>${objs.map(o=>`<div class="ob"><div class="oq"><div class="obg">Q</div>${o.objection}</div><div class="oa">${o.response}</div></div>`).join('')}`:''}
     </div>`;
   rc.classList.remove('on');void rc.offsetWidth;rc.classList.add('on');
-  // 追蹤最終推薦結果
   trackEvent('Recommendation', 'product_recommended', prod.name, 1);
-  trackEvent('Recommendation', 'recommendation_flow', `${S.pt}_${S.ct||'none'}_${need}_${prod.id}`, 1);
+  trackEvent('Recommendation', 'recommendation_flow', `${S.pt}_${S.ct||'none'}_${S.bg||'none'}_${need}_${prod.id}`, 1);
+  // 詳細推薦記錄
+  if (window.logToFirestore) window.logToFirestore('recommendation', {
+    product: prod.name,
+    product_id: prod.id,
+    product_type: S.pt,
+    customer_type: S.ct || 'none',
+    budget: S.bg || 'free',
+    need_l1: S.l1,
+    need_l2: S.l2 || 'none'
+  });
+  // AI 生成場景話術
+  genSceneTalks(prod, {...S});
 }
 
 function hideRes(){
@@ -404,6 +641,193 @@ function selProd(id,el){
 }
 </script>
 <script>
+// ===== 場景話術 AI 生成 =====
+const SCENE_SYSTEM = `你是 Apple 門市的資深銷售顧問。根據客人的輪廓和產品賣點，從中挑出最相關的 2-3 個，包裝成自然的銷售對話。
+
+輸出格式（JSON，不要加任何其他文字）：
+{
+  "scenes": [
+    {
+      "hook": "自然切入句，像真人說話，15字以內，要能引起客人共鳴，例如：「你剛說常拍小孩對不對？」",
+      "point": "這個賣點翻譯成客人聽得懂的好處，20字以內，不要用規格語言",
+      "scene": "用一個生活場景說明為什麼這個對他重要，30-40字，讓客人說「對對對就是這樣」"
+    }
+  ]
+}
+
+重要原則：
+- hook 要針對這位客人的身份和需求，不是通用的
+- point 不要說規格數字，要說「你可以...」「這樣你就能...」
+- scene 要描述客人的真實生活情境
+- 只挑最相關的 2-3 個，寧缺勿濫`;
+
+let sceneReqId = 0;
+
+async function genSceneTalks(prod, state) {
+  const reqId = ++sceneReqId;
+  const pts = (SELLING_POINTS[prod.id] || []).join('\n');
+  const ctLabel = state.ct === 'student' ? '學生' : state.ct === 'office' ? '上班族/商務人士' : state.ct === 'creator' ? '創作者/設計師' : state.ct === 'elder' ? '長輩(50歲以上)' : '一般消費者';
+  const bgLabel = state.bg === 'low' ? '，預算有限' : state.bg === 'mid' ? '，中等預算' : '';
+  const needMap = {
+    'l1-ge':'一般使用/上網','l1-vi':'看影片追劇','l1-do':'文書處理','l1-co':'線上課程',
+    'l2-cam':'專業攝影','l2-vid':'專業錄影','l2-ve':'影片剪輯','l2-ph':'影像編輯',
+    'l2-dr':'繪圖設計','l2-cd':'程式開發','l2-ai':'AI開發','l2-3d':'3D建模',
+    'l2-mu':'音樂製作','l2-scr':'大螢幕需求','l2-bat':'超長續航','l2-spd':'極致效能'
+  };
+  const needLabel = needMap[state.l2 || state.l1] || '一般使用';
+
+  const userMsg = `客人背景：${ctLabel}${bgLabel}，主要需求：${needLabel}
+推薦產品：${prod.name}（${prod.chip}）
+產品賣點清單：
+${pts}
+
+請針對這位客人，挑出最有共鳴的 2-3 個賣點，包裝成自然的銷售對話。`;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 600,
+        system: SCENE_SYSTEM,
+        messages: [{ role: 'user', content: userMsg }]
+      })
+    });
+    const data = await resp.json();
+    // 確保這個 request 還是最新的（避免舊的覆蓋新的）
+    if (reqId !== sceneReqId) return;
+    let text = (data.content?.[0]?.text || '').replace(/```json|```/g,'').trim();
+    const result = JSON.parse(text);
+    renderSceneTalks(result.scenes || []);
+  } catch(e) {
+    if (reqId !== sceneReqId) return;
+    const area = document.getElementById('sceneArea');
+    if (area) area.innerHTML = '<div style="font-size:12px;color:var(--mu);padding:8px">話術生成失敗，請重新選擇</div>';
+  }
+}
+
+function renderSceneTalks(scenes) {
+  const area = document.getElementById('sceneArea');
+  if (!area || !scenes.length) return;
+  area.innerHTML = scenes.map((s, i) => `
+    <div class="sc-block">
+      <div class="sc-hook"><span class="sc-num">${i+1}</span><span class="sc-hook-text">「${s.hook}」</span></div>
+      <hr class="sc-divider">
+      <div class="sc-point"><i data-lucide="check-circle" style="width:12px;height:12px;vertical-align:-1px;margin-right:4px"></i>${s.point}</div>
+      <div class="sc-scene">${s.scene}</div>
+    </div>
+  `).join('');
+  if (window.refreshIcons) window.refreshIcons();
+}
+
+// ===== AI 快速分析功能 =====
+const AI_SYSTEM = `你是 Apple 授權經銷商的銷售 AI 助手。根據客人說的話，分析客人輪廓並自動選擇推薦設定。
+
+可選的產品類型(pt)：macbook, ipad, iphone
+可選的客群(ct)：student（學生）, office（上班族）, creator（創作者）, elder（長輩），不確定就填 null
+可選的預算(bg)：free（不限預算）, mid（中等預算、CP值優先）, low（預算有限、越便宜越好）
+可選的第一層需求(l1)：l1-ge（一般/上網）, l1-vi（看影片）, l1-do（文書，限macbook/ipad）, l1-co（課程，限macbook/ipad）
+可選的第二層需求(l2)：l2-dr（繪圖2D）, l2-ph（影像編輯）, l2-ve（影片編輯）, l2-mu（音樂）, l2-3d（3D建模）, l2-cd（程式開發）, l2-ai（AI開發）, l2-cam（專業攝影，限iphone）, l2-vid（專業錄影，限iphone）, l2-scr（大螢幕，限iphone）, l2-bat（超長續航，限iphone）, l2-spd（極致效能，限iphone），不確定就填 null
+
+預算判斷規則：
+- 提到「便宜」「便宜一點」「預算有限」「摳門」「省錢」「便宜的就好」→ bg=low
+- 提到「預算大概X萬」且數字偏低（iphone<25000, ipad<20000, mac<40000）→ bg=low
+- 提到「CP值」「划算」「不需要最貴的」→ bg=mid
+- 沒提到預算或說「不限」「最好的」→ bg=free
+
+請以 JSON 格式回答，不要加任何其他文字：
+{"pt":"產品類型","ct":"客群或null","bg":"預算","l1":"第一層需求","l2":"第二層需求或null","pitch":"針對這位客人量身打造的推薦話術，自然有溫度，50-80字，根據身份和需求個人化，不要提產品名稱"}`;
+
+async function analyzeCustomer() {
+  const input = document.getElementById('aiInput').value.trim();
+  if (!input) return;
+  const btn = document.getElementById('aiBtn');
+  const btnText = document.getElementById('aiBtnText');
+  btn.disabled = true;
+  btnText.innerHTML = '<span class="ai-spinner"></span> 分析中';
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 400,
+        system: AI_SYSTEM,
+        messages: [{ role: 'user', content: input }]
+      })
+    });
+    const data = await resp.json();
+    let text = (data.content?.[0]?.text || '').replace(/```json|```/g,'').trim();
+    applyAIResult(JSON.parse(text));
+  } catch(e) {
+    document.getElementById('aiBtnText').textContent = '分析失敗，請再試';
+  }
+  btn.disabled = false;
+  btnText.textContent = '分析客人';
+}
+
+function applyAIResult(r) {
+  S = { pt: null, ct: null, bg: null, l1: null, l2: null };
+  document.querySelectorAll('.cd,.no').forEach(el => el.classList.remove('on','s1','s2','bg-on-low','bg-on-mid'));
+  lock('bCust'); lock('bBudget'); lock('bL1'); lock('bL2'); hideRes();
+  // 切換到引導模式
+  document.querySelectorAll('.mb').forEach(b => b.classList.remove('on'));
+  document.querySelector('.mb').classList.add('on');
+  document.querySelectorAll('.ms').forEach(s => s.classList.remove('on'));
+  document.getElementById('gMode').classList.add('on');
+  // 選產品
+  if (r.pt) {
+    const ptMap = { macbook:'pt-mb', ipad:'pt-ip', iphone:'pt-ph' };
+    const ptEl = document.getElementById(ptMap[r.pt]);
+    if (ptEl) selPT(r.pt, ptEl);
+  }
+  // 選客群
+  if (r.ct) {
+    const ctMap = { student:'ct-st', office:'ct-of', creator:'ct-cr', elder:'ct-el' };
+    const ctEl = document.getElementById(ctMap[r.ct]);
+    if (ctEl) selCT(r.ct, ctEl);
+  }
+  // 選預算
+  if (r.bg && r.bg !== 'free') {
+    const bgEl = document.getElementById('bg-' + r.bg);
+    if (bgEl) selBG(r.bg, bgEl);
+  }
+  // 選需求 L1
+  if (r.l1) {
+    const l1El = document.querySelector(`#l1b [data-id="${r.l1}"]`);
+    if (l1El) selNeed(1, r.l1, l1El);
+  }
+  // 選需求 L2
+  if (r.l2) {
+    const l2El = document.querySelector(`#l2b [data-id="${r.l2}"]`);
+    if (l2El) selNeed(2, r.l2, l2El);
+  }
+  // 顯示分析 tags 和話術
+  const tagMap = {
+    macbook:'MacBook', ipad:'iPad', iphone:'iPhone',
+    student:'學生', office:'上班族', creator:'創作者', elder:'長輩',
+    free:'不限預算', mid:'中等預算', low:'預算有限',
+    'l1-ge':'一般使用','l1-vi':'看影片','l1-do':'文書','l1-co':'課程',
+    'l2-cam':'專業攝影','l2-vid':'專業錄影','l2-ve':'影片剪輯','l2-ph':'影像編輯',
+    'l2-dr':'繪圖','l2-cd':'程式開發','l2-ai':'AI開發','l2-3d':'3D建模',
+    'l2-mu':'音樂','l2-scr':'大螢幕','l2-bat':'超長續航','l2-spd':'極致效能'
+  };
+  const tags = [];
+  if (r.pt) tags.push(`<span class="ai-tag ai-tag-pt"><i data-lucide="smartphone" style="width:11px;height:11px;vertical-align:-1px;margin-right:3px"></i>${tagMap[r.pt]||r.pt}</span>`);
+  if (r.ct) tags.push(`<span class="ai-tag ai-tag-ct"><i data-lucide="user" style="width:11px;height:11px;vertical-align:-1px;margin-right:3px"></i>${tagMap[r.ct]||r.ct}</span>`);
+  if (r.bg && r.bg!=='free') tags.push(`<span class="ai-tag ai-tag-nd"><i data-lucide="wallet" style="width:11px;height:11px;vertical-align:-1px;margin-right:3px"></i>${tagMap[r.bg]||r.bg}</span>`);
+  if (r.l1) tags.push(`<span class="ai-tag ai-tag-nd"><i data-lucide="target" style="width:11px;height:11px;vertical-align:-1px;margin-right:3px"></i>${tagMap[r.l1]||r.l1}</span>`);
+  if (r.l2) tags.push(`<span class="ai-tag ai-tag-nd"><i data-lucide="zap" style="width:11px;height:11px;vertical-align:-1px;margin-right:3px"></i>${tagMap[r.l2]||r.l2}</span>`);
+  document.getElementById('aiTags').innerHTML = tags.join('');
+  document.getElementById('aiPitch').textContent = r.pitch || '';
+  const resultEl = document.getElementById('aiResult');
+  resultEl.classList.remove('on'); void resultEl.offsetWidth; resultEl.classList.add('on');
+  if (window.refreshIcons) window.refreshIcons();
+  setTimeout(() => document.querySelector('.rp')?.scrollIntoView({ behavior:'smooth', block:'start' }), 500);
+}
+</script>
+<script>
 // 註冊 Service Worker（PWA 支援）
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -416,5 +840,12 @@ if ('serviceWorker' in navigator) {
       });
   });
 }
+</script>
+<script>
+// 初始化 Lucide 圖示（用 window.onload 確保 CDN 已載入）
+window.addEventListener('load', () => {
+  if (window.lucide) lucide.createIcons();
+});
+window.refreshIcons = () => { if (window.lucide) lucide.createIcons(); };
 </script>
 </body></html>

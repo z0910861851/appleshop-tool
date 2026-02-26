@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>蘋果銷售小工具 · 管理後台</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--bg:#000;--sf:#1d1d1f;--el:#2c2c2e;--bd:#3a3a3c;--tx:#f5f5f7;--mu:#86868b;--ac:#0071e3;--gr:#30d158;--or:#ff9500;--pu:#bf5af2;--re:#ff453a;}
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;}
+
+/* 登入畫面 */
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;}
+.login-box{background:var(--sf);border:1px solid var(--bd);border-radius:20px;padding:40px;width:360px;}
+.login-logo{display:flex;align-items:center;gap:12px;margin-bottom:28px;}
+.login-icon{width:44px;height:44px;background:linear-gradient(135deg,#0071e3,#5e17eb);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;}
+.login-title{font-size:20px;font-weight:700;}
+.login-sub{font-size:13px;color:var(--mu);margin-top:2px;}
+.login-label{font-size:12px;font-weight:600;color:var(--mu);letter-spacing:.8px;text-transform:uppercase;margin-bottom:8px;}
+.login-input{width:100%;background:var(--el);border:1px solid var(--bd);border-radius:10px;padding:13px 16px;color:var(--tx);font-size:15px;font-family:inherit;outline:none;transition:border-color .2s;margin-bottom:16px;}
+.login-input:focus{border-color:var(--ac);}
+.login-btn{width:100%;background:var(--ac);border:none;border-radius:10px;padding:14px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;}
+.login-btn:hover{background:#0077ed;}
+.login-err{color:var(--re);font-size:13px;text-align:center;margin-top:12px;display:none;}
+
+/* 後台主體 */
+.admin{display:none;}
+.hd{background:rgba(29,29,31,.95);border-bottom:1px solid var(--bd);padding:14px 28px;position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);}
+.hd-in{max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;}
+.hd-logo{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:700;}
+.hd-icon{width:30px;height:30px;background:linear-gradient(135deg,#0071e3,#5e17eb);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;}
+.hd-badge{background:rgba(191,90,242,.2);color:var(--pu);padding:3px 10px;border-radius:8px;font-size:11px;font-weight:700;}
+.hd-right{display:flex;align-items:center;gap:12px;}
+.refresh-btn{background:var(--el);border:1px solid var(--bd);border-radius:8px;padding:7px 14px;color:var(--tx);font-size:13px;cursor:pointer;font-family:inherit;transition:all .2s;}
+.refresh-btn:hover{border-color:var(--ac);color:var(--ac);}
+.logout-btn{background:transparent;border:none;color:var(--mu);font-size:13px;cursor:pointer;font-family:inherit;}
+.logout-btn:hover{color:var(--tx);}
+
+.main{max-width:1200px;margin:0 auto;padding:28px;}
+
+/* 頂部 KPI 卡片 */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;}
+.kpi{background:var(--sf);border:1px solid var(--bd);border-radius:16px;padding:20px;}
+.kpi-label{font-size:12px;color:var(--mu);font-weight:600;letter-spacing:.5px;margin-bottom:10px;}
+.kpi-val{font-size:32px;font-weight:700;letter-spacing:-1px;}
+.kpi-sub{font-size:12px;color:var(--mu);margin-top:6px;}
+.kpi-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;}
+
+/* 圖表區 */
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px;}
+.chart-card{background:var(--sf);border:1px solid var(--bd);border-radius:16px;padding:22px;}
+.chart-title{font-size:14px;font-weight:700;margin-bottom:18px;display:flex;align-items:center;gap:8px;}
+.chart-title-icon{font-size:16px;}
+
+/* 長條圖 */
+.bar-item{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.bar-label{font-size:13px;color:var(--tx);width:120px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bar-track{flex:1;background:var(--el);border-radius:6px;height:8px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:6px;transition:width 1s cubic-bezier(.4,0,.2,1);}
+.bar-count{font-size:13px;font-weight:600;color:var(--mu);width:36px;text-align:right;flex-shrink:0;}
+
+/* 時段圖 */
+.hour-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:4px;margin-bottom:8px;}
+.hour-col{display:flex;flex-direction:column;align-items:center;gap:3px;}
+.hour-bar{width:100%;border-radius:3px;background:var(--el);transition:height .8s;}
+.hour-label{font-size:9px;color:var(--mu);}
+
+/* 近期紀錄表格 */
+.table-card{background:var(--sf);border:1px solid var(--bd);border-radius:16px;padding:22px;margin-bottom:28px;}
+.table-title{font-size:14px;font-weight:700;margin-bottom:18px;}
+table{width:100%;border-collapse:collapse;}
+th{font-size:11px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.6px;text-align:left;padding:8px 12px;border-bottom:1px solid var(--bd);}
+td{font-size:13px;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.04);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,.03);}
+.badge{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;}
+.badge-login{background:rgba(48,209,88,.15);color:var(--gr);}
+.badge-rec{background:rgba(0,113,227,.15);color:var(--ac);}
+.badge-ai{background:rgba(191,90,242,.15);color:var(--pu);}
+.badge-sel{background:rgba(255,149,0,.15);color:var(--or);}
+
+/* 載入中 */
+.loading{text-align:center;padding:60px;color:var(--mu);}
+.spinner{width:36px;height:36px;border:3px solid var(--bd);border-top-color:var(--ac);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.empty{text-align:center;padding:40px;color:var(--mu);font-size:14px;}
+
+/* 日期篩選 */
+.filter-row{display:flex;align-items:center;gap:12px;margin-bottom:24px;}
+.filter-btn{background:var(--el);border:1px solid var(--bd);border-radius:8px;padding:7px 16px;color:var(--mu);font-size:13px;cursor:pointer;font-family:inherit;transition:all .2s;}
+.filter-btn.on{background:rgba(0,113,227,.15);border-color:var(--ac);color:var(--ac);font-weight:600;}
+.filter-label{font-size:13px;color:var(--mu);}
+
+@media(max-width:768px){
+  .kpi-row{grid-template-columns:repeat(2,1fr);}
+  .charts-row{grid-template-columns:1fr;}
+  .main{padding:16px;}
+}
+</style>
+</head>
+<body>
+
+<!-- 登入畫面 -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-icon">📊</div>
+      <div>
+        <div class="login-title">管理後台</div>
+        <div class="login-sub">蘋果銷售小工具 · 使用統計</div>
+      </div>
+    </div>
+    <div class="login-label">管理員密碼</div>
+    <input class="login-input" type="password" id="pwInput" placeholder="輸入密碼" onkeydown="if(event.key==='Enter')doAdminLogin()">
+    <button class="login-btn" onclick="doAdminLogin()">進入後台</button>
+    <div class="login-err" id="loginErr">密碼錯誤，請再試一次</div>
+  </div>
+</div>
+
+<!-- 後台主體 -->
+<div class="admin" id="admin">
+  <div class="hd">
+    <div class="hd-in">
+      <div class="hd-logo">
+        <div class="hd-icon">📊</div>
+        蘋果銷售小工具
+        <span class="hd-badge">管理後台</span>
+      </div>
+      <div class="hd-right">
+        <button class="refresh-btn" onclick="loadData()">↻ 重新整理</button>
+        <button class="logout-btn" onclick="doLogout()">登出</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- 日期篩選 -->
+    <div class="filter-row">
+      <span class="filter-label">顯示範圍：</span>
+      <button class="filter-btn on" onclick="setRange(1,this)">今天</button>
+      <button class="filter-btn" onclick="setRange(7,this)">近 7 天</button>
+      <button class="filter-btn" onclick="setRange(30,this)">近 30 天</button>
+      <button class="filter-btn" onclick="setRange(0,this)">全部</button>
+    </div>
+
+    <!-- KPI -->
+    <div class="kpi-row" id="kpiRow">
+      <div class="loading" style="grid-column:1/-1"><div class="spinner"></div>載入中...</div>
+    </div>
+
+    <!-- 圖表 -->
+    <div class="charts-row" id="chartsRow" style="display:none">
+      <div class="chart-card">
+        <div class="chart-title"><span class="chart-title-icon">🏪</span> 各門市使用次數</div>
+        <div id="storeChart"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title"><span class="chart-title-icon">📱</span> 產品推薦排行</div>
+        <div id="productChart"></div>
+      </div>
+    </div>
+
+    <div class="charts-row" id="chartsRow2" style="display:none">
+      <div class="chart-card">
+        <div class="chart-title"><span class="chart-title-icon">⚡</span> 功能使用比例</div>
+        <div id="actionChart"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title"><span class="chart-title-icon">🕐</span> 使用時段分布</div>
+        <div id="hourChart"></div>
+      </div>
+    </div>
+
+    <!-- 近期紀錄 -->
+    <div class="table-card" id="tableCard" style="display:none">
+      <div class="table-title">📋 近期紀錄（最新 50 筆）</div>
+      <table>
+        <thead>
+          <tr>
+            <th>時間</th>
+            <th>門市</th>
+            <th>動作</th>
+            <th>詳細</th>
+          </tr>
+        </thead>
+        <tbody id="logTable"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getFirestore, collection, query, orderBy, limit, getDocs, where, Timestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDZVOTAOB91GQI1QRKysMBy9KsHrPMO-bw",
+    authDomain: "apple-sale.firebaseapp.com",
+    projectId: "apple-sale",
+    storageBucket: "apple-sale.firebasestorage.app",
+    messagingSenderId: "366141813849",
+    appId: "1:366141813849:web:5e55a94d5e92b673186d48",
+    measurementId: "G-WHPWWBP4Y3"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const ADMIN_PW = 'appleshop2026';
+  let currentDays = 1;
+  let allLogs = [];
+
+  window.doAdminLogin = () => {
+    const pw = document.getElementById('pwInput').value;
+    if (pw === ADMIN_PW) {
+      document.getElementById('loginWrap').style.display = 'none';
+      document.getElementById('admin').style.display = 'block';
+      loadData();
+    } else {
+      document.getElementById('loginErr').style.display = 'block';
+    }
+  };
+
+  window.doLogout = () => {
+    document.getElementById('loginWrap').style.display = 'flex';
+    document.getElementById('admin').style.display = 'none';
+    document.getElementById('pwInput').value = '';
+  };
+
+  window.setRange = (days, el) => {
+    currentDays = days;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('on'));
+    el.classList.add('on');
+    renderAll();
+  };
+
+  window.loadData = async () => {
+    document.getElementById('kpiRow').innerHTML = '<div class="loading" style="grid-column:1/-1"><div class="spinner"></div>載入中...</div>';
+    document.getElementById('chartsRow').style.display = 'none';
+    document.getElementById('chartsRow2').style.display = 'none';
+    document.getElementById('tableCard').style.display = 'none';
+    try {
+      const q = query(collection(db, 'usage_logs'), orderBy('timestamp', 'desc'), limit(500));
+      const snap = await getDocs(q);
+      allLogs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderAll();
+    } catch(e) {
+      document.getElementById('kpiRow').innerHTML = `<div class="empty" style="grid-column:1/-1">⚠️ 資料載入失敗：${e.message}</div>`;
+    }
+  };
+
+  function filterByDays(logs) {
+    if (currentDays === 0) return logs;
+    const cutoff = Date.now() - currentDays * 86400000;
+    return logs.filter(l => {
+      if (!l.timestamp) return false;
+      const ts = l.timestamp.toMillis ? l.timestamp.toMillis() : l.timestamp * 1000;
+      return ts >= cutoff;
+    });
+  }
+
+  function renderAll() {
+    const logs = filterByDays(allLogs);
+
+    // KPI
+    const total = logs.length;
+    const logins = logs.filter(l => l.action === 'login').length;
+    const recs = logs.filter(l => l.action === 'recommendation').length;
+    const aiUse = logs.filter(l => l.action === 'ai_analyze').length;
+    const stores = [...new Set(logs.map(l => l.store).filter(Boolean))].length;
+
+    document.getElementById('kpiRow').innerHTML = `
+      <div class="kpi">
+        <div class="kpi-label">總操作次數</div>
+        <div class="kpi-val" style="color:var(--ac)">${total.toLocaleString()}</div>
+        <div class="kpi-sub">所有門市合計</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">開啟工具次數</div>
+        <div class="kpi-val" style="color:var(--gr)">${logins.toLocaleString()}</div>
+        <div class="kpi-sub">門市登入次數</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">產品推薦次數</div>
+        <div class="kpi-val" style="color:var(--or)">${recs.toLocaleString()}</div>
+        <div class="kpi-sub">完成推薦流程</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">活躍門市數</div>
+        <div class="kpi-val" style="color:var(--pu)">${stores}</div>
+        <div class="kpi-sub">/ 6 間門市</div>
+      </div>
+    `;
+
+    // 門市長條圖
+    const storeCounts = {};
+    logs.forEach(l => { if (l.store) storeCounts[l.store] = (storeCounts[l.store] || 0) + 1; });
+    const storeMax = Math.max(...Object.values(storeCounts), 1);
+    const storeColors = ['#0071e3','#30d158','#ff9500','#bf5af2','#ff453a','#64d2ff'];
+    const storeSorted = Object.entries(storeCounts).sort((a,b) => b[1]-a[1]);
+    document.getElementById('storeChart').innerHTML = storeSorted.length
+      ? storeSorted.map(([name, count], i) => `
+          <div class="bar-item">
+            <div class="bar-label">${name.replace('AppleShop ','')}</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${count/storeMax*100}%;background:${storeColors[i%storeColors.length]}"></div></div>
+            <div class="bar-count">${count}</div>
+          </div>`).join('')
+      : '<div class="empty">尚無資料</div>';
+
+    // 產品長條圖
+    const prodCounts = {};
+    logs.filter(l => l.action === 'recommendation' && l.product).forEach(l => {
+      prodCounts[l.product] = (prodCounts[l.product] || 0) + 1;
+    });
+    const prodMax = Math.max(...Object.values(prodCounts), 1);
+    const prodSorted = Object.entries(prodCounts).sort((a,b) => b[1]-a[1]).slice(0, 6);
+    document.getElementById('productChart').innerHTML = prodSorted.length
+      ? prodSorted.map(([name, count]) => `
+          <div class="bar-item">
+            <div class="bar-label">${name}</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${count/prodMax*100}%;background:var(--ac)"></div></div>
+            <div class="bar-count">${count}</div>
+          </div>`).join('')
+      : '<div class="empty">尚無推薦紀錄</div>';
+
+    // 功能使用比例
+    const actionMap = {
+      'login': '🔓 開啟工具',
+      'recommendation': '🎯 產品推薦',
+      'ai_analyze': '⚡ AI 分析',
+      'product_recommended': '📱 推薦完成',
+      'page_view': '👁 頁面瀏覽'
+    };
+    const actionCounts = {};
+    logs.forEach(l => {
+      const label = actionMap[l.action] || l.action;
+      actionCounts[label] = (actionCounts[label] || 0) + 1;
+    });
+    const actionMax = Math.max(...Object.values(actionCounts), 1);
+    const actionColors = ['#0071e3','#30d158','#bf5af2','#ff9500','#64d2ff'];
+    const actionSorted = Object.entries(actionCounts).sort((a,b) => b[1]-a[1]);
+    document.getElementById('actionChart').innerHTML = actionSorted.length
+      ? actionSorted.map(([name, count], i) => `
+          <div class="bar-item">
+            <div class="bar-label">${name}</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${count/actionMax*100}%;background:${actionColors[i%actionColors.length]}"></div></div>
+            <div class="bar-count">${count}</div>
+          </div>`).join('')
+      : '<div class="empty">尚無資料</div>';
+
+    // 時段分布
+    const hourCounts = Array(24).fill(0);
+    logs.forEach(l => {
+      if (l.timestamp) {
+        const ts = l.timestamp.toMillis ? l.timestamp.toMillis() : l.timestamp * 1000;
+        const h = new Date(ts).getHours();
+        hourCounts[h]++;
+      }
+    });
+    const hourMax = Math.max(...hourCounts, 1);
+    const maxBarH = 60;
+    // 只顯示 8am-10pm
+    const showHours = Array.from({length:15},(_,i)=>i+8);
+    document.getElementById('hourChart').innerHTML = `
+      <div style="display:flex;align-items:flex-end;gap:4px;height:${maxBarH+20}px">
+        ${showHours.map(h => `
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+            <div style="font-size:10px;color:var(--mu)">${hourCounts[h]||''}</div>
+            <div style="width:100%;background:var(--ac);border-radius:3px 3px 0 0;height:${Math.max(hourCounts[h]/hourMax*maxBarH,2)}px;opacity:${0.4+hourCounts[h]/hourMax*0.6}"></div>
+            <div style="font-size:9px;color:var(--mu)">${h}</div>
+          </div>`).join('')}
+      </div>
+      <div style="font-size:11px;color:var(--mu);margin-top:8px;text-align:center">時段（8am - 10pm）</div>`;
+
+    // 顯示圖表區
+    document.getElementById('chartsRow').style.display = 'grid';
+    document.getElementById('chartsRow2').style.display = 'grid';
+
+    // 近期紀錄表格
+    const recent = [...logs].slice(0, 50);
+    document.getElementById('logTable').innerHTML = recent.length ? recent.map(l => {
+      const ts = l.timestamp ? new Date(l.timestamp.toMillis ? l.timestamp.toMillis() : l.timestamp * 1000) : null;
+      const timeStr = ts ? `${ts.getMonth()+1}/${ts.getDate()} ${String(ts.getHours()).padStart(2,'0')}:${String(ts.getMinutes()).padStart(2,'0')}` : '-';
+      const badgeClass = l.action === 'login' ? 'badge-login' : l.action === 'recommendation' ? 'badge-rec' : l.action === 'ai_analyze' ? 'badge-ai' : 'badge-sel';
+      const actionLabel = actionMap[l.action] || l.action;
+      const detail = l.product ? `→ ${l.product}` : l.label ? l.label : '';
+      return `<tr>
+        <td style="color:var(--mu)">${timeStr}</td>
+        <td>${(l.store||'-').replace('AppleShop ','')}</td>
+        <td><span class="badge ${badgeClass}">${actionLabel}</span></td>
+        <td style="color:var(--mu);font-size:12px">${detail}</td>
+      </tr>`;
+    }).join('') : '<tr><td colspan="4" class="empty">尚無紀錄</td></tr>';
+
+    document.getElementById('tableCard').style.display = 'block';
+  }
+
+  // 自動載入（如果已登入狀態）
+  window.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('pwInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') window.doAdminLogin();
+    });
+  });
+</script>
+</body>
+</html>
