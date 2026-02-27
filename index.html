@@ -752,16 +752,12 @@ function toggleMic() {
   const input = document.getElementById('aiInput');
 
   if (isRecording) {
-    // 停止收音
-    if (recognition) recognition.stop();
+    // 停止收音，等 onend 後再分析
     isRecording = false;
     btn.classList.remove('recording');
     btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>';
-    status.textContent = '';
-    status.classList.remove('active');
-    if (window.refreshIcons) window.refreshIcons();
-    // 自動分析
-    if (input.value.trim()) analyzeCustomer();
+    status.textContent = '⏳ 處理中...';
+    if (recognition) recognition.stop();
     return;
   }
 
@@ -805,7 +801,17 @@ function toggleMic() {
   };
 
   recognition.onend = () => {
-    if (isRecording) recognition.start(); // 持續收音
+    if (isRecording) {
+      recognition.start(); // 持續收音
+    } else {
+      // 收音結束，自動分析
+      status.textContent = '';
+      status.classList.remove('active');
+      if (window.refreshIcons) window.refreshIcons();
+      setTimeout(() => {
+        if (input.value.trim()) analyzeCustomer();
+      }, 300);
+    }
   };
 
   recognition.start();
@@ -826,7 +832,7 @@ const AI_SYSTEM = `你是 Apple 授權經銷商的資深銷售 AI 助手。根�
 - bg=free：客人沒提到預算限制，或表達「要最好的」「不差錢」等傾向
 - 如果客人說了具體金額，根據該金額判斷（iphone<25000、ipad<20000、mac<40000 → low）
 
-判斷原則：理解客人說話的整體意圖和情境，不要只看單一詞彙。口語化、不完整的句子也要盡力理解。
+判斷原則：理解客人說話的整體意圖和情境，不要只看單一詞彙。輸入內容可能來自語音辨識，沒有標點符號、句子不完整、中英文夾雜都很正常，要盡力理解語意做出判斷。
 
 【重要】你只能輸出一個 JSON 物件，絕對不能有任何其他文字或說明。直接輸出 JSON，不要用\`\`\`包起來：
 {"pt":"產品類型","ct":"客群或null","bg":"預算","l1":"第一層需求","l2":"第二層需求或null","pitch":"針對這位客人量身打造的推薦話術，自然有溫度，50-80字，根據身份和需求個人化，不要提產品名稱"}`;
