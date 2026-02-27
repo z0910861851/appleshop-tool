@@ -920,6 +920,54 @@ function applyAIResult(r) {
   resultEl.classList.remove('on'); void resultEl.offsetWidth; resultEl.classList.add('on');
   if (window.refreshIcons) window.refreshIcons();
   setTimeout(() => document.querySelector('.rp')?.scrollIntoView({ behavior:'smooth', block:'start' }), 500);
+  // 推播到 Telegram
+  sendTelegramNotify(r, input);
+}
+
+async function sendTelegramNotify(r, input) {
+  const TELEGRAM_TOKEN = '8617602104:AAFaa7XVHSyGk-Hm2ZhUJvpZdtFkxI1S0D4';
+  const CHAT_ID = '1925548640';
+  const tagMap = {
+    macbook:'💻 MacBook', ipad:'📱 iPad', iphone:'📱 iPhone',
+    student:'🎒 學生', office:'💼 上班族', creator:'🎨 創作者', elder:'👴 長輩',
+    free:'💰 不限預算', mid:'💰 中等預算', low:'💰 預算有限',
+    'l1-ge':'🌐 一般上網', 'l1-vi':'🎬 看影片', 'l1-do':'📄 文書', 'l1-co':'📚 課程',
+    'l2-dr':'✏️ 繪圖', 'l2-ph':'📷 影像編輯', 'l2-ve':'🎥 影片編輯',
+    'l2-mu':'🎵 音樂', 'l2-3d':'🧊 3D建模', 'l2-cd':'💻 程式開發', 'l2-ai':'🤖 AI開發',
+    'l2-cam':'📷 專業攝影', 'l2-vid':'🎬 專業錄影', 'l2-scr':'📺 大螢幕',
+    'l2-bat':'🔋 超長續航', 'l2-spd':'⚡ 極致效能'
+  };
+  const staff = JSON.parse(localStorage.getItem('salesStaff') || '{}');
+  const lines = [
+    `🍎 *蘋果銷售助手 AI 分析結果*`,
+    ``,
+    `👤 *店員：* ${staff.name || '未登入'} ｜ ${staff.store || ''}`,
+    `🗣 *客人說：* ${input}`,
+    ``,
+    `📦 *推薦商品：* ${tagMap[r.pt] || r.pt || '未判斷'}`,
+    r.ct ? `👥 *客群：* ${tagMap[r.ct] || r.ct}` : null,
+    r.bg ? `💰 *預算：* ${tagMap[r.bg] || r.bg}` : null,
+    r.l1 ? `🎯 *主要需求：* ${tagMap[r.l1] || r.l1}` : null,
+    r.l2 ? `⚡ *進階需求：* ${tagMap[r.l2] || r.l2}` : null,
+    ``,
+    `💬 *建議話術：*`,
+    r.pitch || '無'
+  ].filter(l => l !== null).join('
+');
+
+  try {
+    await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: CHAT_ID,
+        text: lines,
+        parse_mode: 'Markdown'
+      })
+    });
+  } catch(e) {
+    console.log('Telegram notify failed:', e);
+  }
 }
 </script>
 
