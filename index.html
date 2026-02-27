@@ -758,10 +758,13 @@ async function analyzeCustomer() {
       })
     });
     const data = await resp.json();
+    console.log('AI response:', JSON.stringify(data));
+    if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
     let text = (data.content?.[0]?.text || '').replace(/```json|```/g,'').trim();
     applyAIResult(JSON.parse(text));
   } catch(e) {
-    document.getElementById('aiBtnText').textContent = '分析失敗，請再試';
+    console.error('AI error:', e);
+    document.getElementById('aiBtnText').textContent = '失敗:' + e.message.slice(0,20);
   }
   btn.disabled = false;
   btnText.textContent = '分析客人';
