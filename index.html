@@ -952,8 +952,7 @@ async function sendTelegramNotify(r, input) {
     ``,
     `💬 *建議話術：*`,
     r.pitch || '無'
-  ].filter(l => l !== null).join('
-');
+  ].filter(l => l !== null).join('\n');
 
   try {
     await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
